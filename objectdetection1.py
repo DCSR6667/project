@@ -2,13 +2,16 @@ import os
 import cv2 
 import numpy as np 
 import tensorflow as tf 
+import math
+tf.gfile = tf.io.gfile
 import sys
 #################################################################################
-gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.98)
-sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.98)
+sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
 
 #conf = tf.ConfigProto()
 #conf.gpu_options.allow_growth=True
+
 #session = tf.Session(config=conf)
 ########################################################################################3
 # This is needed since the notebook is stored in the object_detection folder. 
@@ -21,7 +24,7 @@ from object_detection.utils import visualization_utils as vis_util
   
 # Name of the directory containing the object detection module we're using 
 #MODEL_NAME = 'ssd_mobilenet_v1_coco_11_06_2017' # The path to the directory where frozen_inference_graph is stored. 
-IMAGE_NAME = 'amb1.jpg'  # The path to the image in which the object has to be detected. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#IMAGE_NAME = 'amb1.jpg'  # The path to the image in which the object has to be detected. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
 # Grab path to current working directory 
 CWD_PATH = os.getcwd() 
@@ -35,7 +38,7 @@ PATH_TO_CKPT = 'frozen_inference_graph.pb'
 PATH_TO_LABELS = 'annotations/label_map.pbtxt'
   
 # Path to image 
-PATH_TO_IMAGE =  'amb1.jpg'#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+PATH_TO_IMAGE =  'images/7.jpg'#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
 # Number of classes the object detector can identify 
 NUM_CLASSES = 1
@@ -53,13 +56,13 @@ category_index = label_map_util.create_category_index(categories)
 # Load the Tensorflow model into memory. 
 detection_graph = tf.Graph() 
 with detection_graph.as_default(): 
-    od_graph_def = tf.GraphDef() 
+    od_graph_def = tf.compat.v1.GraphDef() 
     with tf.gfile.GFile(PATH_TO_CKPT, 'rb') as fid: 
         serialized_graph = fid.read() 
         od_graph_def.ParseFromString(serialized_graph) 
         tf.import_graph_def(od_graph_def, name ='') 
   
-    sess = tf.Session(graph = detection_graph) 
+    sess = tf.compat.v1.Session(graph = detection_graph) 
   
 # Define input and output tensors (i.e. data) for the object detection classifier 
   
@@ -93,7 +96,12 @@ image_expanded = np.expand_dims(image, axis = 0)
     [detection_boxes, detection_scores, detection_classes, num_detections], 
     feed_dict ={image_tensor: image_expanded}) 
   
-# Draw the results of the detection (aka 'visualize the results') 
+# Draw the results of the detection (aka 'visualize the results')
+print(np.squeeze(scores)) 
+print(f'scores is {math.floor((np.squeeze(scores)[0]*100))}')
+
+
+
   
 vis_util.visualize_boxes_and_labels_on_image_array( 
     image, 
@@ -107,7 +115,7 @@ vis_util.visualize_boxes_and_labels_on_image_array(
   
 # All the results have been drawn on the image. Now display the image. 
 cv2.imshow('Object detector', image)
-cv2.imwrite('objectdetection1.jpg', image) 
+#cv2.imwrite('objectdetection1.jpg', image) 
   
 # Press any key to close the image 
 cv2.waitKey(0) 
